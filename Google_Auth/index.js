@@ -1,0 +1,142 @@
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import { Router } from "express";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import jwt from "jsonwebtoken";
+import userModel from "../Backend/src/model/user.model.js";
+
+// Ensure environment variables are loaded
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config({ path: path.join(__dirname, "../Backend/.env") });
+
+const clientID =
+  process.env.GOOGLE_CLIENT_ID ||
+  process.env.CLIENT_ID;
+
+const clientSecret =
+  process.env.GOOGLE_CLIENT_SECRET ||
+  process.env.CLIENT_SECRET ;
+
+const callbackURL =
+  process.env.GOOGLE_CALLBACK_URL ||
+  "http://localhost:3000/auth/google/callback";
+
+// Register Google Strategy with Passport
+passport.use(
+  "google-auth-module",
+  new GoogleStrategy(
+    {
+      clientID,
+      clientSecret,
+      callbackURL,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email =
+          profile.emails && profile.emails[0]
+            ? profile.emails[0].value.toLowerCase().trim()
+            : null;
+        const googleId = profile.id;
+        const avatar =
+          profile.photos && profile.photos[0] ? profile.photos[0].value : "";
+        const name =
+          profile.displayName || profile.name?.givenName || "Google User";
+
+        if (!email) {
+          return done(new Error("No email found in Google profile"), false);
+        }
+
+        let user = await userModel.findOne({
+          $or: [{ googleId }, { email }],
+        });
+
+        if (user) {
+          user.googleId = user.googleId || googleId;
+          if (!user.avatar && avatar) user.avatar = avatar;
+          user.lastLoginAt = new Date();
+          await user.save();
+          return done(null, user);
+        }
+
+        user = await userModel.create({
+          name,
+          email,
+          googleId,
+          avatar,
+          lastLoginAt: new Date(),
+        });
+
+        return done(null, user);
+      } catch (err) {
+        return done(err, false);
+      }
+    }
+  )
+);
+
+const router = Router();
+
+const handleAuth = passport.authenticate("google-auth-module", {
+  scope: ["email", "profile"],
+  session: false,
+});
+
+const handleCallback = [
+  passport.authenticate("google-auth-module", {
+    session: false,
+    failureRedirect: "http://localhost:5173?error=google_auth_failed",
+  }),
+  (req, res) => {
+    try {
+      const user = req.user;
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+      if (!user) {
+        return res.redirect(`${frontendUrl}?error=google_auth_failed`);
+      }
+
+      const jwtSecret =
+        process.env.JWT_SECRET ;
+
+      const token = jwt.sign(
+        {
+          id: user._id,
+          name: user.name,
+        },
+        jwtSecret,
+        {
+          expiresIn: "7d",
+        }
+      );
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.redirect(frontendUrl);
+    } catch (err) {
+      console.error("Google Callback Error:", err);
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      return res.redirect(`${frontendUrl}?error=server_error`);
+    }
+  },
+];
+
+// Support all standard Google Auth route aliases
+router.get("/google", handleAuth);
+router.get("/google/callback", handleCallback);
+router.get("/auth/google", handleAuth);
+router.get("/auth/google/callback", handleCallback);
+router.get("/api/auth/google", handleAuth);
+router.get("/api/auth/google/callback", handleCallback);
+
+export default router;

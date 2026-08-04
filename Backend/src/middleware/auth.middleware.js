@@ -6,7 +6,10 @@ export function authUser(req, res, next) {
     console.log("Cookie Header:", req.headers.cookie);
     console.log("Cookies:", req.cookies);
 
-    const token = req.cookies.token;
+    let token = req.cookies?.token;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+        token = req.headers.authorization.split(" ")[1];
+    }
 
     console.log("Token:", token);
 

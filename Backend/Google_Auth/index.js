@@ -117,14 +117,20 @@ const handleCallback = [
         }
       );
 
+      const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true" || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes("https"));
+
       res.cookie("token", token, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      return res.redirect(frontendUrl);
+      const redirectUrl = frontendUrl.includes("?") 
+        ? `${frontendUrl}&token=${token}` 
+        : `${frontendUrl}?token=${token}`;
+
+      return res.redirect(redirectUrl);
     } catch (err) {
       console.error("Google Callback Error:", err);
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";

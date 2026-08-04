@@ -22,20 +22,21 @@ const allowedOrigins = [
   "http://127.0.0.1:5174"
 ];
 
-app.use(cors({
+const corsOptions = {
     origin: (origin, callback) => {
-        // allow requests with no origin (like mobile apps or curl)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(null, true); // Allow during local development
-        }
+        // Allow requests with no origin (mobile apps, curl) and known origins
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        // reject other origins
+        return callback(null, false);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
-}))
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    credentials: true,
+    optionsSuccessStatus: 200,
+};
 
+app.use(cors(corsOptions));
 
 app.get("/", async(req,res) => {
     const result = await runGraph("what an code for factorial function? ")

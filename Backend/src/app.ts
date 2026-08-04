@@ -32,7 +32,13 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(passport.initialize())
 
-
+app.get("/", (req, res) => {
+    res.json({
+        message: "AI Arena API Backend Server is running 🚀",
+        status: "online",
+        success: true
+    });
+});
 
 app.post("/invoke", async(req,res) => {
     const { input, chatId } = req.body

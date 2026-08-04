@@ -29,7 +29,7 @@ if (frontendUrlFromEnv && !allowedOrigins.includes(frontendUrlFromEnv)) {
 }
 
 const corsOptions = {
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         // Allow requests with no origin (mobile apps, curl)
         if (!origin) return callback(null, true);
         // Allow exact matches from the whitelist

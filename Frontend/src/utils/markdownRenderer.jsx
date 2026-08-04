@@ -7,9 +7,12 @@ import { useState } from 'react';
 export function MarkdownRenderer({ content, accentColor = 'cyan' }) {
   if (!content) return null;
 
+  let text = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+  text = text.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+
   return (
     <div className="space-y-4 text-slate-300 text-sm leading-relaxed font-sans">
-      {renderBlocks(content, accentColor)}
+      {renderBlocks(text, accentColor)}
     </div>
   );
 }
@@ -74,6 +77,15 @@ function renderBlocks(text, accentColor) {
   while (i < lines.length) {
     const line = lines[i];
 
+    // Horizontal Rule (---, ***, ___)
+    if (line.trim() === '---' || line.trim() === '***' || line.trim() === '___') {
+      elements.push(
+        <hr key={`hr-${i}`} className="my-6 border-t border-white/10" />
+      );
+      i++;
+      continue;
+    }
+
     // Code blocks
     if (line.trim().startsWith('```')) {
       const lang = line.trim().slice(3).trim();
@@ -93,6 +105,54 @@ function renderBlocks(text, accentColor) {
       );
       i++; // skip closing ```
       continue;
+    }
+
+    // Markdown Table (| Col 1 | Col 2 |)
+    if (line.trim().startsWith('|') && i + 1 < lines.length && lines[i + 1].trim().startsWith('|')) {
+      const tableLines = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      if (tableLines.length >= 2) {
+        const headerRow = tableLines[0];
+        // Filter out separator rows like |---|---| or |:---:|
+        const contentRows = tableLines.slice(1).filter(r => !/^\|[\s:\-|\+]+\|$/.test(r));
+        
+        const parseRow = (r) => {
+          const cells = r.split('|').map(c => c.trim());
+          if (cells[0] === '') cells.shift();
+          if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop();
+          return cells;
+        };
+        
+        const headers = parseRow(headerRow);
+        const rows = contentRows.map(parseRow);
+
+        elements.push(
+          <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-xl border border-white/10 bg-[#070b10] shadow-lg">
+            <table className="w-full border-collapse text-left text-xs text-slate-300">
+              <thead>
+                <tr className="bg-slate-950/80 border-b border-white/10 text-slate-200 font-semibold font-mono">
+                  {headers.map((h, hIdx) => (
+                    <th key={hIdx} className="py-2.5 px-4">{renderInline(h)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {rows.map((r, rIdx) => (
+                  <tr key={rIdx} className="hover:bg-white/[0.02]">
+                    {r.map((cell, cIdx) => (
+                      <td key={cIdx} className="py-2.5 px-4">{renderInline(cell)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+        continue;
+      }
     }
 
     // Headings

@@ -1,10 +1,10 @@
-import { ChatGoogle } from "@langchain/google";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatCohere } from "@langchain/cohere";
 import config from "../config/config.js";
 
-export const geminiModel = new ChatGoogle({
-    model: "gemini-flash-latest",
+export const geminiModel = new ChatGoogleGenerativeAI({
+    model: "gemini-1.5-flash",
     apiKey: config.Google_API_KEY || "",
 })
 
@@ -14,7 +14,8 @@ export const mistralModel = new ChatMistralAI({
 })
 
 export const cohereModel = new ChatCohere({
-    model: "command-a-03-2025",
+    model: "command-r-08-2024",
     apiKey: config.Cohere_API_KEY || ""
 })
+
 

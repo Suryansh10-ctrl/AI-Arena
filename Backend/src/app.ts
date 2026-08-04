@@ -22,13 +22,20 @@ const allowedOrigins = [
   "http://127.0.0.1:5174"
 ];
 
+// include FRONTEND_URL from env if provided
+const frontendUrlFromEnv = process.env.FRONTEND_URL;
+if (frontendUrlFromEnv && !allowedOrigins.includes(frontendUrlFromEnv)) {
+    allowedOrigins.push(frontendUrlFromEnv);
+}
+
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl) and known origins
+        // Allow requests with no origin (mobile apps, curl)
         if (!origin) return callback(null, true);
+        // Allow exact matches from the whitelist
         if (allowedOrigins.includes(origin)) return callback(null, true);
-        // reject other origins
-        return callback(null, false);
+        // Reject other origins explicitly so the cors middleware can return a 403
+        return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],

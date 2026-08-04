@@ -113,7 +113,7 @@ app.post("/invoke", async(req,res) => {
     }
 })
 
-import googleAuthRouter from "../../Google_Auth/index.js"
+import googleAuthRouter from "../Google_Auth/index.js"
 
 app.use('/api/auth', authRouter)
 app.use('/api/chats', chatRouter)

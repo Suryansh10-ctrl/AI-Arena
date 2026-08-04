@@ -5,7 +5,7 @@ import { Router } from "express";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import jwt from "jsonwebtoken";
-import userModel from "../Backend/src/model/user.model.js";
+import userModel from "../src/model/user.model.js";
 
 // Ensure environment variables are loaded
 const __filename = fileURLToPath(import.meta.url);
@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 dotenv.config({ path: path.join(__dirname, ".env") });
-dotenv.config({ path: path.join(__dirname, "../Backend/.env") });
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const clientID =
   process.env.GOOGLE_CLIENT_ID ||
@@ -101,8 +101,10 @@ const handleCallback = [
         return res.redirect(`${frontendUrl}?error=google_auth_failed`);
       }
 
-      const jwtSecret =
-        process.env.JWT_SECRET ;
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error("JWT_SECRET is not defined");
+      }
 
       const token = jwt.sign(
         {

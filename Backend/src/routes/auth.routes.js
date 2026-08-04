@@ -1,5 +1,5 @@
 import { Router } from "express";
-import googleAuthRouter from "../../../Google_Auth/index.js";
+import googleAuthRouter from "../../Google_Auth/index.js";
 import { getMe, login, register, logout } from "../controller/auth.controller.js";
 import { loginValidator, registerValidator } from "../validator/auth.validator.js";
 import { authUser } from "../middleware/auth.middleware.js";

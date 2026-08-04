@@ -22,8 +22,12 @@ export const authAPI = {
   },
 
   getMe: async () => {
-    const response = await api.get('/api/auth/get-me');
-    return response.data;
+    try {
+      const response = await api.get('/api/auth/get-me');
+      return response.data;
+    } catch {
+      return { success: false, user: null };
+    }
   },
 
   logout: async () => {

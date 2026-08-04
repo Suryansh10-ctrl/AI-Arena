@@ -11,39 +11,26 @@ import authRouter from "./routes/auth.routes.js"
 import chatRouter from "./routes/chat.routes.js"
 
 const app = express()
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+    } else {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(passport.initialize())
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:3000",
-  "http://127.0.0.1:5173",
-  "http://127.0.0.1:5174"
-];
-
-// include FRONTEND_URL from env if provided
-const frontendUrlFromEnv = process.env.FRONTEND_URL;
-if (frontendUrlFromEnv && !allowedOrigins.includes(frontendUrlFromEnv)) {
-    allowedOrigins.push(frontendUrlFromEnv);
-}
-
-const corsOptions = {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-        // Allow requests with no origin (mobile apps, curl)
-        if (!origin) return callback(null, true);
-        // Allow exact matches from the whitelist
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        // Reject other origins explicitly so the cors middleware can return a 403
-        return callback(new Error("Not allowed by CORS"));
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-    credentials: true,
-    optionsSuccessStatus: 200,
-};
-
-app.use(cors(corsOptions));
 
 app.get("/", async(req,res) => {
     const result = await runGraph("what an code for factorial function? ")

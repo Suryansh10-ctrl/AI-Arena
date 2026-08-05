@@ -27,15 +27,16 @@ const callbackURL =
   process.env.GOOGLE_CALLBACK_URL ||
   "http://localhost:3000/auth/google/callback";
 
-// Register Google Strategy with Passport
-passport.use(
-  "google-auth-module",
-  new GoogleStrategy(
-    {
-      clientID,
-      clientSecret,
-      callbackURL,
-    },
+// Register Google Strategy with Passport if credentials are available
+if (clientID && clientSecret) {
+  passport.use(
+    "google-auth-module",
+    new GoogleStrategy(
+      {
+        clientID,
+        clientSecret,
+        callbackURL,
+      },
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email =
@@ -78,7 +79,10 @@ passport.use(
       }
     }
   )
-);
+ );
+} else {
+  console.warn("Google Auth credentials (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET) missing. Google OAuth disabled.");
+}
 
 const router = Router();
 

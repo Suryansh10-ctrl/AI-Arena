@@ -40,7 +40,7 @@ app.get("/", (req, res) => {
     });
 });
 
-app.post("/invoke", async(req,res) => {
+app.post("/invoke", async (req, res) => {
     const { input, chatId } = req.body
 
     try {

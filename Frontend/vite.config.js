@@ -8,11 +8,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://ai-arena-tv6a.onrender.com',
+        target: 'https://ai-arena-4i2t.onrender.com',
         changeOrigin: true,
       },
       '/invoke': {
-        target: 'https://ai-arena-tv6a.onrender.com',
+        target: 'https://ai-arena-4i2t.onrender.com',
         changeOrigin: true,
       },
     },

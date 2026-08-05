@@ -10,7 +10,27 @@ import chatModel from "./model/chat.model.js";
 import authRouter from "./routes/auth.routes.js"
 import chatRouter from "./routes/chat.routes.js"
 
+import path from "path"
+import { fileURLToPath } from "url"
+import fs from "fs"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Determine static public directory
+const publicDir = fs.existsSync(path.resolve(__dirname, "../public"))
+    ? path.resolve(__dirname, "../public")
+    : path.resolve(process.cwd(), "public");
+const frontendDistDir = path.resolve(__dirname, "../../Frontend/dist");
+
+const staticDir = fs.existsSync(publicDir) ? publicDir : (fs.existsSync(frontendDistDir) ? frontendDistDir : null);
+
 const app = express()
+
+if (staticDir) {
+    app.use(express.static(staticDir));
+}
+
 app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (origin) {
@@ -32,7 +52,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(passport.initialize())
 
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
     res.json({
         message: "AI Arena API Backend Server is running 🚀",
         status: "online",
@@ -116,5 +136,20 @@ app.use('/api/auth', authRouter)
 app.use('/api/chats', chatRouter)
 app.use('/auth', googleAuthRouter)
 app.use(googleAuthRouter)
+
+// Wildcard fallback route for Single Page Application (React Router) in Express 5
+app.get("{*path}", (req, res) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/auth") || req.path.startsWith("/invoke")) {
+        return res.status(404).json({ message: "API endpoint not found", success: false });
+    }
+
+    if (staticDir) {
+        const indexPath = path.join(staticDir, "index.html");
+        if (fs.existsSync(indexPath)) {
+            return res.sendFile(indexPath);
+        }
+    }
+    return res.status(404).send(`Cannot GET ${req.path}`);
+});
 
 export default app;

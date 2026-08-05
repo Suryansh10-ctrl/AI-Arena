@@ -25,14 +25,25 @@ export default function App() {
 
   // Check existing session from backend on mount
   useEffect(() => {
+    // Check if token was passed in URL (e.g., Google Auth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      localStorage.setItem('token', tokenFromUrl);
+      urlParams.delete('token');
+      const newSearch = urlParams.toString();
+      const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+      window.history.replaceState({}, document.title, newUrl);
+    }
+
     authAPI.getMe()
       .then((res) => {
-        if (res.success && res.user) {
+        if (res && res.success && res.user) {
           setUser(res.user);
         }
       })
       .catch(() => {
-        // No active session or unauthenticated
+        // Unauthenticated visitor
       });
   }, []);
 

@@ -10,6 +10,14 @@ const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const authAPI = {
   register: async ({ name, email, password }) => {
     const response = await api.post('/api/auth/register', { name, email, password });
@@ -18,6 +26,9 @@ export const authAPI = {
 
   login: async ({ email, password }) => {
     const response = await api.post('/api/auth/login', { email, password });
+    if (response.data?.token) {
+      localStorage.setItem('token', response.data.token);
+    }
     return response.data;
   },
 
@@ -31,8 +42,14 @@ export const authAPI = {
   },
 
   logout: async () => {
-    const response = await api.post('/api/auth/logout');
-    return response.data;
+    localStorage.removeItem('token');
+    localStorage.removeItem('ai_arena_user');
+    try {
+      const response = await api.post('/api/auth/logout');
+      return response.data;
+    } catch {
+      return { success: true };
+    }
   },
 };
 

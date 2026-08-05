@@ -75,9 +75,6 @@ const searchNode: GraphNode<typeof state> = async (state) => {
 };
 
 const solutionNode: GraphNode<typeof state> = async (state) => {
-    let sol1Text = "";
-    let sol2Text = "";
-
     // Clean non-breaking spaces (\xa0) and control characters from web snippets
     const cleanSearchContext = (state.searchContext || "")
         .replace(/\u00a0/g, " ")
@@ -88,18 +85,26 @@ const solutionNode: GraphNode<typeof state> = async (state) => {
         ? `${state.problem}\n\n[Real-Time Internet Information via Tavily Search]:\n${cleanSearchContext}\n\nPlease utilize the above up-to-date web information if relevant to address the user query.`
         : state.problem;
 
-    try {
-        const mistralResponse = await invokeWithRetries(mistralModel, promptWithContext, 4, 1500);
-        sol1Text = mistralResponse?.text || String(mistralResponse || "");
-    } catch (err: any) {
+    // Run Mistral and Cohere concurrently in parallel to avoid HTTP gateway timeouts on Render
+    const [mistralResult, cohereResult] = await Promise.allSettled([
+        invokeWithRetries(mistralModel, promptWithContext, 3, 1000),
+        invokeWithRetries(cohereModel, promptWithContext, 3, 1000),
+    ]);
+
+    let sol1Text = "";
+    if (mistralResult.status === "fulfilled") {
+        sol1Text = mistralResult.value?.text || String(mistralResult.value || "");
+    } else {
+        const err = mistralResult.reason;
         console.error("Mistral Model Error:", err?.message || err);
         sol1Text = `⚠️ **Mistral API Notice**: Rate limit or model error. (${err?.message || "HTTP 429 Too Many Requests"})\n\n*Please wait a few seconds before trying again.*`;
     }
 
-    try {
-        const cohereResponse = await invokeWithRetries(cohereModel, promptWithContext, 4, 1500);
-        sol2Text = cohereResponse?.text || String(cohereResponse || "");
-    } catch (err: any) {
+    let sol2Text = "";
+    if (cohereResult.status === "fulfilled") {
+        sol2Text = cohereResult.value?.text || String(cohereResult.value || "");
+    } else {
+        const err = cohereResult.reason;
         console.error("Cohere Model Error:", err?.message || err);
         sol2Text = `⚠️ **Cohere API Notice**: Rate limit or model error. (${err?.message || "HTTP 429 Too Many Requests"})\n\n*Please wait a few seconds before trying again.*`;
     }
@@ -107,8 +112,8 @@ const solutionNode: GraphNode<typeof state> = async (state) => {
     return {
         solution_1: sol1Text,
         solution_2: sol2Text,
-    }
-}
+    };
+};
 
 const judgeSchema = z.object({
     solution_1_score: z.number().min(0).max(10),

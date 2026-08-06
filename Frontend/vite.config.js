@@ -12,11 +12,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://ai-arena-4i2t.onrender.com',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:3000',
         changeOrigin: true,
       },
       '/invoke': {
-        target: 'https://ai-arena-4i2t.onrender.com',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:3000',
         changeOrigin: true,
       },
     },

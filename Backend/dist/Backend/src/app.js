@@ -1,49 +1,37 @@
-import express from "express"
-import runGraph from "./ai/graph.ai.js"
-import cors from "cors"
-import cookieParser from "cookie-parser"
-import passport from "./config/passport.js"
-
+import express from "express";
+import runGraph from "./ai/graph.ai.js";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import passport from "./config/passport.js";
 import jwt from "jsonwebtoken";
 import chatModel from "./model/chat.model.js";
-
-import authRouter from "./routes/auth.routes.js"
-import chatRouter from "./routes/chat.routes.js"
-
-import path from "path"
-import { fileURLToPath } from "url"
-import fs from "fs"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
+import authRouter from "./routes/auth.routes.js";
+import chatRouter from "./routes/chat.routes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Determine static public directory
 const publicDir = fs.existsSync(path.resolve(__dirname, "../public"))
     ? path.resolve(__dirname, "../public")
     : path.resolve(process.cwd(), "public");
 const frontendDistDir = path.resolve(__dirname, "../../Frontend/dist");
-
 const staticDir = fs.existsSync(publicDir) ? publicDir : (fs.existsSync(frontendDistDir) ? frontendDistDir : null);
-
-const app = express()
-
+const app = express();
 app.set("trust proxy", 1);
-
 if (staticDir) {
     app.use(express.static(staticDir));
 }
-
 app.use(cors({
     origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
 }));
-
-app.use(express.json())
-app.use(cookieParser())
-app.use(passport.initialize())
-
+app.use(express.json());
+app.use(cookieParser());
+app.use(passport.initialize());
 app.get("/api/health", (req, res) => {
     res.json({
         message: "AI Arena API Backend Server is running 🚀",
@@ -51,18 +39,15 @@ app.get("/api/health", (req, res) => {
         success: true
     });
 });
-
 app.post("/invoke", async (req, res) => {
-    const { input, chatId } = req.body
-
+    const { input, chatId } = req.body;
     try {
-        const result = await runGraph(input)
-
+        const result = await runGraph(input);
         // Optional database persistence if user is logged in
         try {
             const token = req.cookies.token;
             if (token && process.env.JWT_SECRET) {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string };
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 if (decoded && decoded.id) {
                     const messageItem = {
                         problem: input,
@@ -70,15 +55,15 @@ app.post("/invoke", async (req, res) => {
                         solution_2: typeof result.solution_2 === "object" ? JSON.stringify(result.solution_2) : String(result.solution_2 || ""),
                         judgeResult: result.judgeResult || null,
                     };
-
                     let savedChat;
                     if (chatId) {
-                        savedChat = await chatModel.findOne({ _id: chatId, user: decoded.id } as any);
+                        savedChat = await chatModel.findOne({ _id: chatId, user: decoded.id });
                     }
                     if (savedChat) {
                         savedChat.messages.push(messageItem);
                         await savedChat.save();
-                    } else {
+                    }
+                    else {
                         savedChat = await chatModel.create({
                             user: decoded.id,
                             title: input,
@@ -93,16 +78,17 @@ app.post("/invoke", async (req, res) => {
                     });
                 }
             }
-        } catch (e) {
+        }
+        catch (e) {
             console.error("Non-fatal error persisting chat:", e);
         }
-
         return res.status(200).json({
             message: "Graph executed successfully",
             success: true,
             result
-        })
-    } catch (err: any) {
+        });
+    }
+    catch (err) {
         console.error("Graph execution error:", err);
         return res.status(200).json({
             message: "AI model rate limit or API error occurred.",
@@ -120,21 +106,17 @@ app.post("/invoke", async (req, res) => {
             }
         });
     }
-})
-
-import googleAuthRouter from "../Google_Auth/index.js"
-
-app.use('/api/auth', authRouter)
-app.use('/api/chats', chatRouter)
-app.use('/auth', googleAuthRouter)
-app.use(googleAuthRouter)
-
+});
+import googleAuthRouter from "../Google_Auth/index.js";
+app.use('/api/auth', authRouter);
+app.use('/api/chats', chatRouter);
+app.use('/auth', googleAuthRouter);
+app.use(googleAuthRouter);
 // Wildcard fallback route for Single Page Application (React Router) in Express 5
 app.get("{*path}", (req, res) => {
     if (req.path.startsWith("/api") || req.path.startsWith("/auth") || req.path.startsWith("/invoke")) {
         return res.status(404).json({ message: "API endpoint not found", success: false });
     }
-
     if (staticDir) {
         const indexPath = path.join(staticDir, "index.html");
         if (fs.existsSync(indexPath)) {
@@ -143,5 +125,5 @@ app.get("{*path}", (req, res) => {
     }
     return res.status(404).send(`Cannot GET ${req.path}`);
 });
-
 export default app;
+//# sourceMappingURL=app.js.map

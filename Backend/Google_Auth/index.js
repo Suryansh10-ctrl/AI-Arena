@@ -25,7 +25,7 @@ const clientSecret =
 
 const callbackURL =
   process.env.GOOGLE_CALLBACK_URL ||
-  "http://localhost:3000/auth/google/callback";
+  "/api/auth/google/callback";
 
 // Register Google Strategy with Passport if credentials are available
 if (clientID && clientSecret) {
@@ -92,17 +92,22 @@ const handleAuth = passport.authenticate("google-auth-module", {
 });
 
 const handleCallback = [
-  passport.authenticate("google-auth-module", {
-    session: false,
-    failureRedirect: "http://localhost:5173?error=google_auth_failed",
-  }),
+  (req, res, next) => {
+    const frontendUrl = process.env.FRONTEND_URL || "/";
+    const failPath = frontendUrl.endsWith("/") ? `${frontendUrl}?error=google_auth_failed` : `${frontendUrl}/?error=google_auth_failed`;
+    passport.authenticate("google-auth-module", {
+      session: false,
+      failureRedirect: failPath,
+    })(req, res, next);
+  },
   (req, res) => {
     try {
       const user = req.user;
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      const frontendUrl = process.env.FRONTEND_URL || "/";
 
       if (!user) {
-        return res.redirect(`${frontendUrl}?error=google_auth_failed`);
+        const failPath = frontendUrl.endsWith("/") ? `${frontendUrl}?error=google_auth_failed` : `${frontendUrl}/?error=google_auth_failed`;
+        return res.redirect(failPath);
       }
 
       const jwtSecret = process.env.JWT_SECRET;
@@ -130,15 +135,16 @@ const handleCallback = [
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      const redirectUrl = frontendUrl.includes("?") 
-        ? `${frontendUrl}&token=${token}` 
-        : `${frontendUrl}?token=${token}`;
+      const redirectUrl = frontendUrl === "/"
+        ? `/?token=${token}`
+        : (frontendUrl.includes("?") ? `${frontendUrl}&token=${token}` : `${frontendUrl}?token=${token}`);
 
       return res.redirect(redirectUrl);
     } catch (err) {
       console.error("Google Callback Error:", err);
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-      return res.redirect(`${frontendUrl}?error=server_error`);
+      const frontendUrl = process.env.FRONTEND_URL || "/";
+      const errPath = frontendUrl.endsWith("/") ? `${frontendUrl}?error=server_error` : `${frontendUrl}/?error=server_error`;
+      return res.redirect(errPath);
     }
   },
 ];

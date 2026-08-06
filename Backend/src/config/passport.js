@@ -4,7 +4,7 @@ import userModel from "../model/user.model.js";
 
 const clientID = process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.CLIENT_SECRET;
-const callbackURL = process.env.GOOGLE_CALLBACK_URL || "http://localhost:3000/auth/google/callback";
+const callbackURL = process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback";
 
 if (clientID && clientSecret) {
   passport.use(

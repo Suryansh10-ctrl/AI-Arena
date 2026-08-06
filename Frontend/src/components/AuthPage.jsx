@@ -92,7 +92,7 @@ export function AuthPage({ onLogin, onGuestLogin, onGoogleLogin, onCancel }) {
 
   const handleGoogleAuth = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    const backendBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const backendBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
     window.location.href = `${backendBaseUrl}/api/auth/google`;
   };
 

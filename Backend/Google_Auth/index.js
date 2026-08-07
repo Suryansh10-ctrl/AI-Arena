@@ -15,17 +15,25 @@ dotenv.config();
 dotenv.config({ path: path.join(__dirname, ".env") });
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  process.env.RENDER === "true" ||
+  !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes("https"));
+
 const clientID =
   process.env.GOOGLE_CLIENT_ID ||
   process.env.CLIENT_ID;
 
 const clientSecret =
   process.env.GOOGLE_CLIENT_SECRET ||
-  process.env.CLIENT_SECRET ;
+  process.env.CLIENT_SECRET;
 
-const callbackURL =
-  process.env.GOOGLE_CALLBACK_URL ||
-  "/api/auth/google/callback";
+let callbackURL = process.env.GOOGLE_CALLBACK_URL;
+if (!callbackURL || (isProduction && callbackURL.includes("localhost"))) {
+  callbackURL = isProduction
+    ? "https://ai-arena-4i2t.onrender.com/auth/google/callback"
+    : "http://localhost:3000/auth/google/callback";
+}
 
 // Register Google Strategy with Passport if credentials are available
 if (clientID && clientSecret) {

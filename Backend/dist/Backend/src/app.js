@@ -45,7 +45,10 @@ app.post("/invoke", async (req, res) => {
         const result = await runGraph(input);
         // Optional database persistence if user is logged in
         try {
-            const token = req.cookies.token;
+            let token = req.cookies?.token;
+            if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+                token = req.headers.authorization.split(" ")[1];
+            }
             if (token && process.env.JWT_SECRET) {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 if (decoded && decoded.id) {

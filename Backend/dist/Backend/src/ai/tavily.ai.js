@@ -12,9 +12,9 @@ export async function searchWeb(query) {
     try {
         const client = tavily({ apiKey });
         const response = await client.search(cleanQuery, {
-            searchDepth: "advanced",
-            maxResults: 5,
-            includeAnswer: true,
+            searchDepth: "basic",
+            maxResults: 3,
+            includeAnswer: false,
         });
         let contextBlocks = [];
         // Include Tavily's direct synthesized web answer if available

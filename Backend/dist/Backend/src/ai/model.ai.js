@@ -1,9 +1,9 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatGoogle } from "@langchain/google/node";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatCohere } from "@langchain/cohere";
 import config from "../config/config.js";
-export const geminiModel = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-flash",
+export const geminiModel = new ChatGoogle({
+    model: "gemini-3.7-flash",
     apiKey: config.Google_API_KEY || "",
 });
 export const mistralModel = new ChatMistralAI({

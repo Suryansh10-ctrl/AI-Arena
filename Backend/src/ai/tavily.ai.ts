@@ -15,9 +15,9 @@ export async function searchWeb(query: string): Promise<string> {
   try {
     const client = tavily({ apiKey });
     const response = await client.search(cleanQuery, {
-      searchDepth: "advanced",
-      maxResults: 5,
-      includeAnswer: true,
+      searchDepth: "basic",
+      maxResults: 3,
+      includeAnswer: false,
     });
 
     let contextBlocks: string[] = [];

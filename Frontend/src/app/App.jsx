@@ -253,6 +253,35 @@ export default function App() {
       }
     } catch (err) {
       console.error("Error communicating with backend:", err);
+      const isGateway = err?.response?.status === 502 || err?.response?.status === 504;
+      const errorMsg = isGateway
+        ? "⚠️ **Gateway Error (502)**: The AI backend server was momentarily unreachable or restarted. Please try sending your query again."
+        : `⚠️ **Request Error**: ${err?.response?.data?.message || err?.message || 'Could not communicate with the backend'}. Please try again.`;
+
+      const errorFallbackItem = {
+        problem: query,
+        solution_1: errorMsg,
+        solution_2: errorMsg,
+        judgeResult: {
+          solution_1_score: 0,
+          solution_2_score: 0,
+          solution_1_reasoning: "Request failed due to a network or server gateway error.",
+          solution_2_reasoning: "Request failed due to a network or server gateway error."
+        }
+      };
+
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          if (chat.id === targetChatId) {
+            return {
+              ...chat,
+              title: chat.title === 'New Chat' || !chat.title ? query : chat.title,
+              messages: [...chat.messages, errorFallbackItem]
+            };
+          }
+          return chat;
+        })
+      );
     } finally {
       setIsLoading(false);
     }
@@ -862,7 +891,7 @@ function SolutionCard({ title, subtitle, markdownContent, score, accent }) {
         </div>
 
         {/* Markdown Content */}
-        <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="max-h-[500px] overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar">
           <MarkdownRenderer content={markdownContent} accentColor={accent} />
         </div>
       </div>
@@ -1039,7 +1068,7 @@ function LeaderboardView({ chats }) {
   const leaderboardData = [
     {
       rank: 1,
-      name: 'Mistral Medium Latest',
+      name: 'Open Mistral 7B',
       tag: 'Model A',
       badgeColor: 'from-cyan-500 to-blue-600',
       provider: 'Mistral AI',
@@ -1167,7 +1196,7 @@ function LeaderboardView({ chats }) {
 function AIModelsView() {
   const models = [
     {
-      name: 'Mistral Medium Latest',
+      name: 'Open Mistral 7B',
       tag: 'Model A',
       provider: 'Mistral AI',
       color: 'from-cyan-500 to-blue-600',

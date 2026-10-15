@@ -11,7 +11,7 @@ export function MarkdownRenderer({ content, accentColor = 'cyan' }) {
   text = text.replace(/\\n/g, '\n').replace(/\\"/g, '"');
 
   return (
-    <div className="space-y-4 text-slate-300 text-sm leading-relaxed font-sans">
+    <div className="space-y-4 text-slate-300 text-sm leading-relaxed font-sans break-words [overflow-wrap:anywhere]">
       {renderBlocks(text, accentColor)}
     </div>
   );
@@ -61,7 +61,7 @@ function CodeBlock({ lang, code, accentColor }) {
         </div>
         <CopyButton code={code} />
       </div>
-      <pre className="p-4 overflow-x-auto text-xs font-mono text-slate-200 leading-relaxed">
+      <pre className="p-4 overflow-x-auto text-xs font-mono text-slate-200 leading-relaxed custom-scrollbar">
         <code>{highlightSyntax(code)}</code>
       </pre>
     </div>
@@ -130,7 +130,7 @@ function renderBlocks(text, accentColor) {
         const rows = contentRows.map(parseRow);
 
         elements.push(
-          <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-xl border border-white/10 bg-[#070b10] shadow-lg">
+          <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-xl border border-white/10 bg-[#070b10] shadow-lg custom-scrollbar">
             <table className="w-full border-collapse text-left text-xs text-slate-300">
               <thead>
                 <tr className="bg-slate-950/80 border-b border-white/10 text-slate-200 font-semibold font-mono">

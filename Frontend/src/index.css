@@ -1,20 +1,65 @@
-@import "tailwindcss";
+/* Slim, elegant WebKit Scrollbars */
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
 
-/* Custom thin scrollbar */
+*::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.45);
+}
+
+*::-webkit-scrollbar-button,
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+*::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* Dedicated slim scrollbar for solutions view & sidebars */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.02);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.4);
+  background: rgba(0, 240, 255, 0.5);
+}
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 html, body {
